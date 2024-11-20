@@ -14,10 +14,12 @@ public class Server implements Runnable{
     private ServerSocket server;
     private boolean done;
     private ExecutorService pool;
+    Object lock;
 
     public Server(){
         connections = new ArrayList<>();
         done = false;
+        lock = new Object();
     }
 
     @Override
@@ -75,9 +77,33 @@ public class Server implements Runnable{
             try {
                 out = new PrintWriter(client.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                out.println("Please enter an alias: ");
-                nickname = in.readLine();
-                if (connections.contains(nickname)){
+
+                boolean duplicate = false;
+                String tempName;
+                do {
+                    out.println("Please enter an alias: ");
+                    tempName = in.readLine();
+//                    nickname = in.readLine();
+                    synchronized (lock){
+                        duplicate = false;
+                        for (ConnectionHandler c : connections){
+//                            if (c == this)  continue;
+                            if (c.nickname != null && c.nickname.equals(tempName)){
+                                duplicate = true;
+                                out.println();
+                                out.println("this alias is already in use.");
+                                break;
+                            }
+                        }
+                        if (!duplicate){
+                            this.nickname = tempName;
+                        }
+                    }
+                }while(duplicate);
+//                this.nickname = tempName;
+
+
+                if (duplicate){
                     out.println("this alias is already in use.");
                 }
                 else{
@@ -85,15 +111,8 @@ public class Server implements Runnable{
                     broadcast(nickname + " joined the chat!");
                     String message;
                     while ((message = in.readLine()) != null){
-                        if (message.startsWith("/nick ")){
-                            String[] messageSplit = message.split(" ", 2);
-                            if (messageSplit.length == 2){
-                                broadcast(nickname + " changed their alias to " + messageSplit[1]);
-                                nickname = messageSplit[1];
-                                out.println("Successfully changed alias to " + nickname);
-                            } else {
-                                out.println("No alias provided!");
-                            }
+                        if (false){
+                            //ignore
                         } else if (message.startsWith("/quit")){
                             broadcast(nickname + " left the chat!");
                             shutdown();
