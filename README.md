@@ -24,7 +24,7 @@ connection is maintained until client decides to disconnect using /quit
 * Server listens for incoming connections
 * When a client connects new thread is spawned corresponding to that client
 * A list of all connected clients is maintained
-* If multiple clients register for same alias only 1 is allowed and rest are blocked (alias allocation is Atomic)
+* **If multiple clients register for same alias only 1 is allowed and rest are blocked (alias allocation is Atomic)**
 * When a client sends a message, it is broadcasted to all connected clients
 *  If a client disconnects the connection is removed from the list
   
